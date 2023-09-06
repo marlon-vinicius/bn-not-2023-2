@@ -21,3 +21,7 @@ PROJETO BACK-END
 ## Inicializando o Prisma com conector para MongoDB
 `npx prisma init --datasource-provider mongodb`
 * Instale a extensão Prisma no Visual Studio Code
+
+## Gerando o cliente do Prisma
+`npx prisma generate`
+* Precisa ser executado **toda vez** que o arquivo `schema.prisma` for alterado
