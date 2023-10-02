@@ -4,10 +4,11 @@ const controller = {}   // Objeto vazio
 
 controller.create = async function(req, res) {
   try {
+
     // Conecta-se ao BD e envia uma instrução
     // de criação de um novo documento, com os
     // dados que estão dentro de req.body
-    await prisma.professor.create({data: req.body})
+    await prisma.aluno.create({data: req.body})
 
     // Envia uma resposta de sucesso ao front-end
     // HTTP 201: Created
@@ -23,10 +24,15 @@ controller.create = async function(req, res) {
 }
 
 controller.retrieveAll = async function(req, res) {
-  try {
+
+  //Por padrão, não inclui nenhum relacionamento
+  const include = {}
+
+  if(req.query.turmas) include.turmas = true
+  try {    
     // Manda buscar os dados no servidor
-    // Traz ordenado por nome, depois por nivel
-    const result = await prisma.professor.findMany({
+    const result = await prisma.aluno.findMany({
+      include,
       orderBy: [
         { nome: 'asc' }  // Ordem ascendente
       ]
@@ -45,7 +51,7 @@ controller.retrieveAll = async function(req, res) {
 
 controller.retrieveOne = async function(req, res) {
   try {
-    const result = await prisma.professor.findUnique({
+    const result = await prisma.aluno.findUnique({
       where: { id: req.params.id }
     })
 
@@ -65,7 +71,7 @@ controller.retrieveOne = async function(req, res) {
 
 controller.update = async function(req, res) {
   try {
-    const result = await prisma.professor.update({
+    const result = await prisma.aluno.update({
       where: { id: req.params.id },
       data: req.body
     })
@@ -86,7 +92,7 @@ controller.update = async function(req, res) {
 
 controller.delete = async function(req, res) {
   try {
-    const result = await prisma.professor.delete({
+    const result = await prisma.aluno.delete({
       where: { id: req.params.id }
     })
 
@@ -101,6 +107,39 @@ controller.delete = async function(req, res) {
     // Envia o erro ao front-end, com status 500
     // HTTP 500: Internal Server Error
     res.status(500).send(error)
+  }
+}
+
+controller.addTurma = async function(req, res) {
+  try {
+
+    // Busca aluno para recuperar a lista de ids de turmas dele
+    const aluno = await prisma.aluno.findUnique({
+      where: { id: req.params.alunoId}
+    })
+
+    // Se ele não tiver turmas ainda, criamos a lista vazia
+    const turmaIds = aluno.turmaIds || []
+
+
+    // Se o id de turma passado ainda não estiver na lista do
+    // aluno, fazemos a respectiva inserção
+    if(! turmaIds.include(req.params.turmaId))
+    turmaIds.push(req.params.turmaId)
+    
+    // Atualizamos o aluno com uma lista de ids de uma turma atualizada
+    const result = await prisma.aluno.update({
+      where: {id: req.params.alunoId },
+      data: { turmaIds }
+    })
+    
+  }
+  catch {
+     // Deu errado: exibe o erro no console do back-end
+     console.error(error)
+     // Envia o erro ao front-end, com status 500
+     // HTTP 500: Internal Server Error
+     res.status(500).send(error)
   }
 }
 

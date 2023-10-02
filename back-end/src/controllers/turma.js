@@ -7,7 +7,7 @@ controller.create = async function(req, res) {
     // Conecta-se ao BD e envia uma instrução
     // de criação de um novo documento, com os
     // dados que estão dentro de req.body
-    await prisma.professor.create({data: req.body})
+    await prisma.turma.create({data: req.body})
 
     // Envia uma resposta de sucesso ao front-end
     // HTTP 201: Created
@@ -24,11 +24,21 @@ controller.create = async function(req, res) {
 
 controller.retrieveAll = async function(req, res) {
   try {
+
+    // Por padrão, não inclui nenhum relacionamento
+    const include = {}
+
+    if(req.query.professor)   include.professor = true
+    if(req.query.curso)       include.curso = true
+    if(req.query.alunos)      include.alunos = true
+
     // Manda buscar os dados no servidor
-    // Traz ordenado por nome, depois por nivel
-    const result = await prisma.professor.findMany({
+    const result = await prisma.turma.findMany({
+      // Traz as informações das coleções relacionadas
+      include,
       orderBy: [
-        { nome: 'asc' }  // Ordem ascendente
+        { diaSemana: 'asc' },  // Ordem ascendente
+        { horaInicial: 'asc' }  // Ordem ascendente
       ]
     })
     // HTTP 200: OK
@@ -45,7 +55,7 @@ controller.retrieveAll = async function(req, res) {
 
 controller.retrieveOne = async function(req, res) {
   try {
-    const result = await prisma.professor.findUnique({
+    const result = await prisma.turma.findUnique({
       where: { id: req.params.id }
     })
 
@@ -65,7 +75,7 @@ controller.retrieveOne = async function(req, res) {
 
 controller.update = async function(req, res) {
   try {
-    const result = await prisma.professor.update({
+    const result = await prisma.turma.update({
       where: { id: req.params.id },
       data: req.body
     })
@@ -86,7 +96,7 @@ controller.update = async function(req, res) {
 
 controller.delete = async function(req, res) {
   try {
-    const result = await prisma.professor.delete({
+    const result = await prisma.turma.delete({
       where: { id: req.params.id }
     })
 
