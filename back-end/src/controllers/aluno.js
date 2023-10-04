@@ -124,7 +124,7 @@ controller.addTurma = async function(req, res) {
 
     // Se o id de turma passado ainda não estiver na lista do
     // aluno, fazemos a respectiva inserção
-    if(! turmaIds.include(req.params.turmaId))
+    if(! turmaIds.includes(req.params.turmaId))
     turmaIds.push(req.params.turmaId)
     
     // Atualizamos o aluno com uma lista de ids de uma turma atualizada
@@ -141,6 +141,47 @@ controller.addTurma = async function(req, res) {
      // HTTP 500: Internal Server Error
      res.status(500).send(error)
   }
+}
+
+controller.removeTurma = async function(req, res) {
+  try {
+
+    // Busca o aluno para recuperar a lista de ids de tumas dele
+    const aluno = await prisma.aluno.findUnique({
+      where: { id: req.params.alunoId }
+    })
+
+    //Não encontro o aluno, ou o aluno não tem turmas
+    if(! aluno || ! aluno.turmaIds) res.send(404).end()
+
+    // Procura na lista de ids de turma do aluno, se existe o id
+    // de turma passado para a remoção
+    for(let i = 0; i < alunos.turmaIds.length; i++) {
+      // Encontrou
+      if(aluno.turmaIds[i] === req.params.turmaId) {
+        // Remove o id da turma da lista de ids de turma
+        aluno.turmaIds.splice(i, 1)
+
+        // Faz a atualização no aluno, alterando o conteúdo de turmasId
+        const result = await prisma.aluno.update({
+          where: { id: req.params.alunoId},
+          data: { turmaIds: aluno.turmaIds}
+        })
+
+        // Encontrou e atualizou ~> retorna HTTP 204: No content
+        if(result) return res.status(204).end()
+        // Não encontrou (e não atualizou) ~> HTTP 404: Not Found
+        return res.status(404).end()
+      }
+    }
+
+  }catch {
+    // Deu errado: exibe o erro no console do back-end
+    console.error(error)
+    // Envia o erro ao front-end, com status 500
+    // HTTP 500: Internal Server Error
+    res.status(500).send(error)
+ }
 }
 
 export default controller
